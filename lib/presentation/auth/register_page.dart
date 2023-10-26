@@ -1,4 +1,9 @@
+import 'package:fic9_ecommerce_template_app/data/model/requests/register_request_model.dart';
+import 'package:fic9_ecommerce_template_app/presentation/auth/bloc/register/register_bloc.dart';
+import 'package:fic9_ecommerce_template_app/presentation/auth/login_page.dart';
+import 'package:fic9_ecommerce_template_app/presentation/home/dashboard_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../common/components/button.dart';
 import '../../common/components/custom_text_field.dart';
@@ -87,11 +92,56 @@ class _RegisterPageState extends State<RegisterPage> {
             obscureText: true,
           ),
           const SpaceHeight(24.0),
-          Button.filled(
-            onPressed: () {
-              Navigator.pop(context);
+          BlocConsumer<RegisterBloc, RegisterState>(
+            listener: (context, state) {
+              state.maybeWhen(
+                orElse: () {},
+                success: (data) {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginPage()));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Berhasil mendaftar'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+                error: (message) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(message),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                },
+              );
             },
-            label: 'Daftar',
+            builder: (context, state) {
+              return state.maybeWhen(
+                orElse: () {
+                  return Button.filled(
+                    onPressed: () {
+                      final data = RegisterRequestModel(
+                          name: nameController.text,
+                          password: passwordController.text,
+                          email: emailController.text,
+                          username: nameController.text.replaceAll(' ', ''));
+                      context
+                          .read<RegisterBloc>()
+                          .add(RegisterEvent.register(data: data));
+                    },
+                    label: 'Daftar',
+                  );
+                },
+                loading: () {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                },
+              );
+            },
           ),
           const SpaceHeight(60.0),
           Center(
